@@ -47,14 +47,14 @@ lc_file() {
 	for pathname in "$ORIGEM"/*; do
 #		if [[ -d "$pathname" ]] && [[ $RECURSIVO == 1 ]]; then
 		if [[ -d "$pathname" ]]; then
-            echo "ChangeDir" $pathname;
-            echo "Processing File" ${pathname##*/};
+            echo "ChangeDir" "$pathname";
+            echo "Processing File" "${pathname##*/}";
 #            lc_file \""$pathname"\" \""$AREADEBUSCA"\" \""$RECURSIVO"\";
 			lc_file "$pathname" "$AREADEBUSCA" "$RECURSIVO";
 #			read stop;
         else
-        	for arq in "$pathname"; do
-		        echo "Processing File" ${pathname##*/};
+        	for arq in $pathname; do
+		        echo "Processing File" "${pathname##*/}";
 #                echo -e "File meam" $ORIGEM${pathname##*/} >> duplicados.txt;
 				if [ -f "$pathname" ]; then 
                     comandot="(find \"$AREADEBUSCA\" -type f -name \"${pathname##*/}\")";
@@ -78,7 +78,7 @@ lc_file() {
 						LC_FILE=$(eval "$comandot");
 						ARQ_ORIGEM=$ORIGEM${pathname##*/};
 						echo "LC_FILE-:$LC_FILE";
-						LC_FILE=$(echo -e ${LC_FILE//$ARQ_ORIGEM/\"});
+						LC_FILE=$(echo -e "${LC_FILE//$ARQ_ORIGEM/\"}");
 						echo "LC_FILE-.-:$LC_FILE";
 						LC_FILE="$(echo -e "${LC_FILE}" | sed -e 's/^[[:space:]]*// ' | sed -e 's/^[^/]*//')"
 						echo "LC_FILE-..-:$LC_FILE";
@@ -87,14 +87,17 @@ lc_file() {
 						echo "Comparando arquivos!.....";
 						#comandot="(cmp \"$ORIGEM${pathname##*/}\" \"$AREADEBUSCA${pathname##*/}\")";
 						comandot="cmp \"$ORIGEM/${pathname##*/}\" \"$LC_FILE\"";
-						echo -e $comandot;
+						echo -e "$comandot";
 #						read STOP2;
 						if eval "$comandot"; then
 							echo "Os arquivos: $ORIGEM/${pathname##*/} $AREADEBUSCA/${pathname##*/} são idênticos!...";
-							log_search "File meam $ORIGEM/${pathname##*/}" "$LC_FILE\n" 
-#							echo -e "\t  $LC_FILE\n">>duplicados.txt;
+							if [ "$VERBO" ]; then
+								log_search "File meam $ORIGEM/${pathname##*/}" "$LC_FILE\n"
+								#	echo -e "\t  $LC_FILE\n">>duplicados.txt;
+							fi	
 						fi
-                       let "cont++";
+#                       let "cont++";
+					   ((cont++)) || true;
                     else
                         echo "Ocorreu erro ao buscar o arquivo: $pathname!...";
                         erro=1;
@@ -278,6 +281,9 @@ do
 			# Extrair a versão do cabeçalho do script.
 			grep '^## Versão ' "$0" | tail -1 | cut -d: -f 1 | tr -d \#
 			exit 0;
+		;;
+		-v | --verbose)
+			VERBO=1;
 		;;
 		-s | --setup)
 			make_config;
